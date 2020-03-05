@@ -1,110 +1,51 @@
 // from data.js
 var tableData = data;
 
+// get table references
 var tbody = d3.select("tbody");
 
-function appendRowsAndData(obj) {
+function buildTable(data) {
+  // First, clear out any existing data
+  tbody.html("");
+
+  // Next, loop through each object in the data
+  // and append a row and cells for each value in the row
+  data.forEach((dataRow) => {
+    // Append a row to the table body
     var row = tbody.append("tr");
 
-    // Below loop assumes object keys are in same order and are present every time
-    Object.entries(obj).forEach(([key, value]) => {
-        row.append("td").text(value); 
-    })
-};
+    // Loop through each field in the dataRow and add
+    // each value as a table cell (td)
+    Object.values(dataRow).forEach((val) => {
+      var cell = row.append("td");
+        cell.text(val);
+      }
+    );
+  });
+}
 
-// Append all table rows and data
-data.forEach(appendRowsAndData);
+function handleClick() {
 
-var button = d3.select("#filter-btn");
+  // Grab the datetime value from the filter
+  var date = d3.select("#datetime").property("value");
+  let filteredData = tableData;
 
-// Only runs when button is clicked or user presses enter
-button.on("click", function() {
-    d3.event.preventDefault();
+  // Check to see if a date was entered and filter the
+  // data using that date.
+  if (date) {
+    // Apply `filter` to the table data to only keep the
+    // rows where the `datetime` value matches the filter value
+    filteredData = filteredData.filter(row => row.datetime === date);
+  }
 
-    var dateInput = d3.select("#datetime");
-    var datetime = dateInput.property("value");
+  // Rebuild the table using the filtered data
+  // @NOTE: If no date was entered, then filteredData will
+  // just be the original tableData.
+  buildTable(filteredData);
+}
 
-    var filterInputs = {};
+// Attach an event to listen for the form button
+d3.selectAll("#filter-btn").on("click", handleClick);
 
-    if (datetime !== "") {
-        filterInputs.datetime = datetime;
-    }
-
-    // This variable set in moreFilters.on()
-    if (usingMoreFilters) {
-        var cityFilter = d3.select("#City-filter");
-        var city = cityFilter.property("value").toLowerCase();
-
-        if (city !== "") {
-            filterInputs.city = city;
-        }
-
-        var stateFilter = d3.select("#State-filter");
-        var state = stateFilter.property("value").toLowerCase();
-
-        if (state !== "") {
-            filterInputs.state = state;
-        }
-
-        var countryFilter = d3.select("#Country-filter");
-        var country = countryFilter.property("value").toLowerCase();
-
-        if (country !== "") {
-            filterInputs.country = country;
-        }
-
-        var shapeFilter = d3.select("#Shape-filter");
-        var shape = shapeFilter.property("value").toLowerCase();
-        
-        if (shape !== "") {
-            filterInputs.shape = shape;
-        }
-    }
-
-    var filtered = tableData.filter(obj => {
-        var criteria = true;
-        Object.entries(filterInputs).forEach(([key, value]) => {
-            criteria = criteria && (obj[key] === value);
-        });
-        return criteria;
-    });
-
-    console.log(filtered);
-
-    tbody.html("");
-
-    filtered.forEach(appendRowsAndData);
-});
-
-var resetFilters = d3.select("#reset-filter-btn");
-var moreFilters = d3.select("#more-filter-btn");
-var usingMoreFilters = false;
-
-moreFilters.on("click", function() {
-    d3.event.preventDefault();
-
-    usingMoreFilters = true;
-
-    // Use for loop to create additional filters
-    var filters = d3.select("#filters");
-    const filterList = ["City", "State", "Country", "Shape"];
-
-    filterList.forEach(filter => {
-        var newLi = filters.append("li").attr("class","filter list-group-item");
-        newLi.append("label").attr("for", filter).text(`Enter a ${filter}`);
-        newLi.append("input").attr("class", "form-control")
-                             .attr("type", "text")
-                             .attr("id", `${filter}-filter`);
-    });
-    moreFilters.style("display", "none");
-    resetFilters.style("display", "block");
-});
-
-// "reset" button clears filters and displays all data
-resetFilters.on("click", function() {
-    d3.event.preventDefault();
-
-    var allFilters = d3.selectAll("input")
-                       .property("value", "");
-    data.forEach(appendRowsAndData);
-});
+// Build the table when the page loads
+buildTable(tableData);
