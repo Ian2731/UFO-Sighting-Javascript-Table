@@ -1,1 +1,1 @@
-Using Javascript and DOM manipulation to create a table 
+Using Javascript and DOM manipulation to create a dynamic table 
